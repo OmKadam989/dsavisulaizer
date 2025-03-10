@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VisuAlgo - Sorting Algorithm Visualization</title>
+    <link rel="stylesheet" href="./bubblesort.css">
+</head>
+<body>
+    <!-- Header Section -->
+    <header>
+        <div class="logo-container">
+            <a href="./homepage.html">
+            <img src="./VisuAlgo logo 2.png" alt="VisuAlgo Logo" class="logo">
+        </a>
+            <div class="logo-text">VisuAlgo</div>
+        </div>
+        <div class="search-container">
+            <input type="text" class="search-box" placeholder="Search algorithms...">
+        </div>
+        <button class="mode-toggle" id="modeToggle">Dark Mode</button>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container">
+        <h1 class="algorithm-title">Merge Sort Visualization</h1>
+        <p class="algorithm-description">
+            Merge Sort is an efficient, divide-and-conquer sorting algorithm. It works by dividing the array into 
+            smaller subarrays, sorting each subarray, and then merging them back together. The merge process 
+            takes advantage of the fact that merged subarrays are already sorted. Merge Sort has a time complexity 
+            of O(n log n), making it more efficient than bubble and insertion sort for large datasets.
+        </p>
+
+        <div class="visualizer-container">
+            <div class="visualizer">
+                <div class="controls">
+                    <div class="input-container">
+                        <label for="array-input">Input Numbers:</label>
+                        <input type="text" id="array-input" class="input-field" placeholder="e.g., 64,34,25,12,22,11,90" value="64,34,25,12,22,11,90">
+                        <button id="generate-btn" class="btn btn-generate">Generate Bars</button>
+                    </div>
+                    <div class="input-container">
+                        <button id="sort-btn" class="btn btn-sort">Start Sorting</button>
+                        <button id="pause-btn" class="btn btn-pause">Pause</button>
+                        <button id="reset-btn" class="btn btn-reset">Reset</button>
+                        <div class="speed-container">
+                            <label for="speed-slider">Speed:</label>
+                            <input type="range" id="speed-slider" class="speed-slider" min="1" max="5" value="2">
+                        </div>
+                    </div>
+                </div>
+                <div id="array-container" class="array-container">
+                    <!-- Array bars will be generated here -->
+                </div>
+                <div id="auxiliary-container" class="array-container auxiliary-container">
+                    <!-- Auxiliary array for merge operations -->
+                </div>
+            </div>
+            <div class="console">
+                <h3 class="console-title">Operation Log</h3>
+                <div id="console-output">
+                    <div class="console-message info">Welcome to Merge Sort Visualization. Generate bars or enter numbers to begin.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="code-section">
+            <h3 class="code-title">Merge Sort Implementation</h3>
+            <pre class="code-block">
+function mergeSort(arr) {
+    // Base case: arrays with 0 or 1 element are already sorted
+    if (arr.length <= 1) {
+        return arr;
+    }
+    
+    // Split the array into two halves
+    const middle = Math.floor(arr.length / 2);
+    const leftArray = arr.slice(0, middle);
+    const rightArray = arr.slice(middle);
+    
+    // Recursively sort both halves
+    return merge(
+        mergeSort(leftArray),
+        mergeSort(rightArray)
+    );
+}
+
+function merge(left, right) {
+    let result = [];
+    let leftIndex = 0;
+    let rightIndex = 0;
+    
+    // Compare elements from both arrays and add the smaller one to result
+    while (leftIndex < left.length && rightIndex < right.length) {
+        if (left[leftIndex] < right[rightIndex]) {
+            result.push(left[leftIndex]);
+            leftIndex++;
+        } else {
+            result.push(right[rightIndex]);
+            rightIndex++;
+        }
+    }
+    
+    // Add remaining elements from either array
+    return result
+        .concat(left.slice(leftIndex))
+        .concat(right.slice(rightIndex));
+}</pre>
+        </div>
+    </div>
+
+    <script>
+        // Dark/Light Mode Toggle Functionality
+        const modeToggle = document.getElementById('modeToggle');
+        const body = document.body;
+
+        modeToggle.addEventListener('click', () => {
+            body.classList.toggle('dark-mode');
+            if (body.classList.contains('dark-mode')) {
+                modeToggle.textContent = 'Light Mode';
+            } else {
+                modeToggle.textContent = 'Dark Mode';
+            }
+        });
+
+        // Sorting Visualizer Code
+        const arrayContainer = document.getElementById('array-container');
+        const auxiliaryContainer = document.getElementById('auxiliary-container');
+        const consoleOutput = document.getElementById('console-output');
+        const arrayInput = document.getElementById('array-input');
+        const generateBtn = document.getElementById('generate-btn');
+        const sortBtn = document.getElementById('sort-btn');
+        const pauseBtn = document.getElementById('pause-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const speedSlider = document.getElementById('speed-slider');
+
+        let array = [];
+        let auxiliaryArray = [];
+        let sorting = false;
+        let paused = false;
+        let sortingInterval;
+
+        // Generate array bars based on input
+        function generateArray() {
+            // Clear previous arrays
+            arrayContainer.innerHTML = '';
+            auxiliaryContainer.innerHTML = '';
+            consoleOutput.innerHTML = '';
+            addConsoleMessage('Array generated.', 'info');
+
+            // Parse input values
+            const inputValues = arrayInput.value.split(',').map(val => parseInt(val.trim())).filter(val => !isNaN(val));
+            
+            if (inputValues.length === 0) {
+                addConsoleMessage('Please enter valid numbers separated by commas.', 'info');
+                return;
+            }
+
+            array = inputValues;
+            auxiliaryArray = new Array(array.length).fill(0);
+            
+            // Find max value for scaling
+            const maxValue = Math.max(...array);
+            
+            // Create and add bars to container
+            array.forEach((value, index) => {
+                const heightPercentage = (value / maxValue) * 100;
+                
+                // Main array bar
+                const bar = document.createElement('div');
+                bar.classList.add('array-bar');
+                bar.style.height = `${heightPercentage * 2.5}px`; // Scale height
+                bar.innerHTML = value;
+                
+                // Add index number under each bar
+                const indexLabel = document.createElement('div');
+                indexLabel.classList.add('array-bar-index');
+                indexLabel.textContent = index;
+                bar.appendChild(indexLabel);
+                
+                arrayContainer.appendChild(bar);
+                
+                // Auxiliary array bar (initially hidden)
+                const auxBar = document.createElement('div');
+                auxBar.classList.add('array-bar', 'aux-bar');
+                auxBar.style.height = '0px'; // Start with zero height
+                auxBar.style.opacity = '0';  // Start invisible
+                
+                auxiliaryContainer.appendChild(auxBar);
+            });
+            
+            addConsoleMessage(`Created array: [${array.join(', ')}]`, 'info');
+        }
+
+        // Add message to console
+        function addConsoleMessage(message, type) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('console-message', type);
+            messageElement.textContent = message;
+            consoleOutput.appendChild(messageElement);
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        }
+
+        // Update the main array visualization
+        function updateBars() {
+            const bars = arrayContainer.querySelectorAll('.array-bar');
+            const maxValue = Math.max(...array);
+            
+            array.forEach((value, index) => {
+                if (index < bars.length) {
+                    const heightPercentage = (value / maxValue) * 100;
+                    bars[index].style.height = `${heightPercentage * 2.5}px`;
+                    bars[index].innerHTML = value;
+                    
+                    // Remove existing index labels to avoid duplicates
+                    const existingLabel = bars[index].querySelector('.array-bar-index');
+                    if (existingLabel) {
+                        bars[index].removeChild(existingLabel);
+                    }
+                    
+                    const indexLabel = document.createElement('div');
+                    indexLabel.classList.add('array-bar-index');
+                    indexLabel.textContent = index;
+                    bars[index].appendChild(indexLabel);
+                }
+            });
+        }
+
+        // Update auxiliary array visualization
+        function updateAuxiliaryBars(auxArray, start, end) {
+            const auxBars = auxiliaryContainer.querySelectorAll('.aux-bar');
+            const maxValue = Math.max(...array);
+            
+            // First reset all bars
+            auxBars.forEach((bar, index) => {
+                bar.style.opacity = '0';
+                bar.style.height = '0px';
+                bar.innerHTML = '';
+            });
+            
+            // Update only the active section
+            for (let i = 0; i < auxArray.length; i++) {
+                if (i < auxBars.length) {
+                    const heightPercentage = (auxArray[i] / maxValue) * 100;
+                    auxBars[start + i].style.height = `${heightPercentage * 2.5}px`;
+                    auxBars[start + i].style.opacity = '1';
+                    auxBars[start + i].innerHTML = auxArray[i];
+                    
+                    // Add position label
+                    const posLabel = document.createElement('div');
+                    posLabel.classList.add('array-bar-index');
+                    posLabel.textContent = start + i;
+                    auxBars[start + i].appendChild(posLabel);
+                }
+            }
+        }
+
+        // Hide auxiliary array
+        function hideAuxiliaryBars() {
+            const auxBars = auxiliaryContainer.querySelectorAll('.aux-bar');
+            auxBars.forEach(bar => {
+                bar.style.opacity = '0';
+                bar.style.height = '0px';
+                bar.innerHTML = '';
+            });
+        }
+
+        // Set bars to active/highlighted state
+        function highlightBars(indices, className) {
+            const bars = arrayContainer.querySelectorAll('.array-bar');
+            indices.forEach(index => {
+                if (index >= 0 && index < bars.length) {
+                    bars[index].classList.add(className);
+                }
+            });
+        }
+
+        // Reset bar states
+        function resetBarStates() {
+            const bars = arrayContainer.querySelectorAll('.array-bar');
+            bars.forEach(bar => {
+                bar.classList.remove('comparing', 'swapping', 'sorted', 'left-partition', 'right-partition', 'merging');
+            });
+        }
+
+        // Mark section of array as sorted
+        function markSorted(start, end) {
+            const bars = arrayContainer.querySelectorAll('.array-bar');
+            for (let i = start; i <= end; i++) {
+                if (i >= 0 && i < bars.length) {
+                    bars[i].classList.add('sorted');
+                }
+            }
+        }
+
+        // Mark all bars as sorted
+        function markAllSorted() {
+            const bars = arrayContainer.querySelectorAll('.array-bar');
+            bars.forEach(bar => {
+                bar.classList.add('sorted');
+            });
+        }
+
+        // Get delay based on speed slider
+        function getDelay() {
+            const speed = parseInt(speedSlider.value);
+            return 1000 / speed; // Faster speeds = smaller delays
+        }
+
+        // Check for pause
+        async function checkPause() {
+            if (paused) {
+                await new Promise(resolve => {
+                    sortingInterval = setInterval(() => {
+                        if (!paused) {
+                            clearInterval(sortingInterval);
+                            resolve();
+                        }
+                    }, 100);
+                });
+            }
+        }
+
+        // Merge Sort Algorithm with visualization
+        async function mergeSort() {
+            sorting = true;
+            paused = false;
+            pauseBtn.textContent = 'Pause';
+            
+            addConsoleMessage('Starting Merge Sort...', 'info');
+            
+            await mergeSortRecursive(0, array.length - 1);
+            
+            // Mark all elements as sorted
+            resetBarStates();
+            markAllSorted();
+            hideAuxiliaryBars();
+            addConsoleMessage('Merge Sort complete! Array is sorted.', 'complete');
+            sorting = false;
+        }
+        
+        // Recursive merge sort with visualization
+        async function mergeSortRecursive(start, end) {
+            // Base case: array of size 1 is already sorted
+            if (start >= end) {
+                if (start === end) {
+                    await checkPause();
+                    resetBarStates();
+                    highlightBars([start], 'sorted');
+                    addConsoleMessage(`Subarray of size 1 at index ${start} is already sorted: [${array[start]}]`, 'info');
+                    await new Promise(resolve => setTimeout(resolve, getDelay()));
+                }
+                return;
+            }
+            
+            // Find the middle point
+            const mid = Math.floor((start + end) / 2);
+            
+            // Visualization: show the division
+            await checkPause();
+            resetBarStates();
+            highlightBars(Array.from({length: mid - start + 1}, (_, i) => i + start), 'left-partition');
+            highlightBars(Array.from({length: end - mid}, (_, i) => i + mid + 1), 'right-partition');
+            addConsoleMessage(`Dividing array from [${start}...${end}] into [${start}...${mid}] and [${mid+1}...${end}]`, 'info');
+            await new Promise(resolve => setTimeout(resolve, getDelay()));
+            
+            // Recursively sort left and right halves
+            await mergeSortRecursive(start, mid);
+            await mergeSortRecursive(mid + 1, end);
+            
+            // Merge the sorted halves
+            await merge(start, mid, end);
+        }
+        
+        // Merge function with visualization
+        async function merge(start, mid, end) {
+            await checkPause();
+            resetBarStates();
+            
+            // Highlight the arrays being merged
+            highlightBars(Array.from({length: mid - start + 1}, (_, i) => i + start), 'left-partition');
+            highlightBars(Array.from({length: end - mid}, (_, i) => i + mid + 1), 'right-partition');
+            addConsoleMessage(`Merging subarrays [${start}...${mid}] and [${mid+1}...${end}]`, 'info');
+            await new Promise(resolve => setTimeout(resolve, getDelay()));
+            
+            // Create temporary arrays
+            let left = array.slice(start, mid + 1);
+            let right = array.slice(mid + 1, end + 1);
+            
+            // Create auxiliary array to show the merge process
+            let auxResult = [];
+            
+            addConsoleMessage(`Left: [${left.join(', ')}], Right: [${right.join(', ')}]`, 'info');
+            
+            // Initial index of first and second subarrays
+            let i = 0, j = 0;
+            // Initial index of merged subarray
+            let k = start;
+            
+            while (i < left.length && j < right.length) {
+                await checkPause();
+                
+                // Compare elements from both arrays
+                const leftIdx = start + i;
+                const rightIdx = mid + 1 + j;
+                
+                resetBarStates();
+                highlightBars([leftIdx, rightIdx], 'comparing');
+                addConsoleMessage(`Comparing ${left[i]} and ${right[j]}`, 'compare');
+                await new Promise(resolve => setTimeout(resolve, getDelay()));
+                
+                if (left[i] <= right[j]) {
+                    // If left element is smaller
+                    addConsoleMessage(`${left[i]} <= ${right[j]}, adding ${left[i]} to merged array`, 'swap');
+                    
+                    array[k] = left[i];
+                    auxResult.push(left[i]);
+                    updateAuxiliaryBars(auxResult, start, end);
+                    
+                    highlightBars([leftIdx], 'merging');
+                    await new Promise(resolve => setTimeout(resolve, getDelay()));
+                    
+                    i++;
+                } else {
+                    // If right element is smaller
+                    addConsoleMessage(`${left[i]} > ${right[j]}, adding ${right[j]} to merged array`, 'swap');
+                    
+                    array[k] = right[j];
+                    auxResult.push(right[j]);
+                    updateAuxiliaryBars(auxResult, start, end);
+                    
+                    highlightBars([rightIdx], 'merging');
+                    await new Promise(resolve => setTimeout(resolve, getDelay()));
+                    
+                    j++;
+                }
+                
+                updateBars();
+                k++;
+            }
+            
+            // Copy remaining elements of left array if any
+            while (i < left.length) {
+                await checkPause();
+                
+                addConsoleMessage(`Adding remaining left element ${left[i]} to merged array`, 'swap');
+                
+                array[k] = left[i];
+                auxResult.push(left[i]);
+                updateAuxiliaryBars(auxResult, start, end);
+                
+                highlightBars([start + i], 'merging');
+                updateBars();
+                
+                await new Promise(resolve => setTimeout(resolve, getDelay()));
+                
+                i++;
+                k++;
+            }
+            
+            // Copy remaining elements of right array if any
+            while (j < right.length) {
+                await checkPause();
+                
+                addConsoleMessage(`Adding remaining right element ${right[j]} to merged array`, 'swap');
+                
+                array[k] = right[j];
+                auxResult.push(right[j]);
+                updateAuxiliaryBars(auxResult, start, end);
+                
+                highlightBars([mid + 1 + j], 'merging');
+                updateBars();
+                
+                await new Promise(resolve => setTimeout(resolve, getDelay()));
+                
+                j++;
+                k++;
+            }
+            
+            // Mark this section as sorted
+            resetBarStates();
+            markSorted(start, end);
+            addConsoleMessage(`Merged subarray [${start}...${end}] is now sorted`, 'info');
+            await new Promise(resolve => setTimeout(resolve, getDelay()));
+            
+            // Hide auxiliary array after merge is complete
+            hideAuxiliaryBars();
+        }
+
+        // Event Listeners
+        generateBtn.addEventListener('click', generateArray);
+        
+        sortBtn.addEventListener('click', () => {
+            if (!sorting) {
+                mergeSort();
+            }
+        });
+        
+        pauseBtn.addEventListener('click', () => {
+            if (sorting) {
+                paused = !paused;
+                pauseBtn.textContent = paused ? 'Resume' : 'Pause';
+                addConsoleMessage(paused ? 'Sorting paused.' : 'Sorting resumed.', 'info');
+            }
+        });
+        
+        resetBtn.addEventListener('click', () => {
+            if (sorting) {
+                paused = true;
+                clearInterval(sortingInterval);
+                sorting = false;
+            }
+            generateArray();
+        });
+
+        // Initialize
+        generateArray();
+    </script>
+
+    <style>
+        /* Additional styles for merge sort visualization */
+        .auxiliary-container {
+            margin-top: 20px;
+            border-top: 1px dashed #ccc;
+            padding-top: 10px;
+            min-height: 100px;
+        }
+
+        .left-partition {
+            background-color: rgba(135, 206, 250, 0.8) !important; /* LightSkyBlue */
+        }
+
+        .right-partition {
+            background-color: rgba(144, 238, 144, 0.8) !important; /* LightGreen */
+        }
+
+        .merging {
+            background-color: rgba(255, 165, 0, 0.8) !important; /* Orange */
+        }
+
+        .aux-bar {
+            transition: height 0.3s ease-in-out, opacity 0.3s ease-in-out;
+        }
+
+        /* Dark mode adjustments */
+        .dark-mode .left-partition {
+            background-color: rgba(70, 130, 180, 0.8) !important; /* SteelBlue */
+        }
+
+        .dark-mode .right-partition {
+            background-color: rgba(60, 179, 113, 0.8) !important; /* MediumSeaGreen */
+        }
+
+        .dark-mode .merging {
+            background-color: rgba(255, 140, 0, 0.8) !important; /* DarkOrange */
+        }
+    </style>
+</body>
+</html>

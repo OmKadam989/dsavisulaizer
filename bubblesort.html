@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VisuAlgo - Sorting Algorithm Visualization</title>
+    <link rel="stylesheet" href="./bubblesort.css">
+    <style>
+        
+    </style>
+</head>
+<body>
+    <!-- Header Section -->
+    <header>
+        <div class="logo-container">
+            <a href="./homepage.html">
+            <img src="./VisuAlgo logo 2.png" alt="VisuAlgo Logo" class="logo">
+        </a>
+
+            <div class="logo-text">VisuAlgo</div>
+        </div>
+        <div class="search-container">
+            <input type="text" class="search-box" placeholder="Search algorithms...">
+        </div>
+        <button class="mode-toggle" id="modeToggle">Dark Mode</button>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container">
+        <h1 class="algorithm-title">Bubble Sort Visualization</h1>
+        <p class="algorithm-description">
+            Bubble Sort is a simple comparison-based algorithm that repeatedly steps through the list, 
+            compares adjacent elements, and swaps them if they are in the wrong order. The process is 
+            repeated until the list is sorted. While not efficient for large datasets, it's a great 
+            algorithm to understand basic sorting principles.
+        </p>
+
+        <div class="visualizer-container">
+            <div class="visualizer">
+                <div class="controls">
+                    <div class="input-container">
+                        <label for="array-input">Input Numbers:</label>
+                        <input type="text" id="array-input" class="input-field" placeholder="e.g., 64,34,25,12,22,11,90" value="64,34,25,12,22,11,90">
+                        <button id="generate-btn" class="btn btn-generate">Generate Bars</button>
+                    </div>
+                    <div class="input-container">
+                        <button id="sort-btn" class="btn btn-sort">Start Sorting</button>
+                        <button id="pause-btn" class="btn btn-pause">Pause</button>
+                        <button id="reset-btn" class="btn btn-reset">Reset</button>
+                        <div class="speed-container">
+                            <label for="speed-slider">Speed:</label>
+                            <input type="range" id="speed-slider" class="speed-slider" min="1" max="5" value="3">
+                        </div>
+                    </div>
+                </div>
+                <div id="array-container" class="array-container">
+                    <!-- Array bars will be generated here -->
+                </div>
+            </div>
+            <div class="console">
+                <h3 class="console-title">Operation Log</h3>
+                <div id="console-output">
+                    <div class="console-message info">Welcome to Bubble Sort Visualization. Generate bars or enter numbers to begin.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="code-section">
+            <h3 class="code-title">Bubble Sort Implementation</h3>
+            <pre class="code-block">
+function bubbleSort(arr) {
+    const n = arr.length;
+    let swapped;
+    
+    // Outer loop for passes
+    for (let i = 0; i < n; i++) {
+        swapped = false;
+        
+        // Inner loop for comparisons and swaps
+        for (let j = 0; j < n - i - 1; j++) {
+            // Compare adjacent elements
+            if (arr[j] > arr[j + 1]) {
+                // Swap them if they are in wrong order
+                [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
+                swapped = true;
+            }
+        }
+        
+        // If no swapping occurred in this pass, array is sorted
+        if (!swapped) break;
+    }
+    
+    return arr;
+}</pre>
+        </div>
+    </div>
+
+    <!-- Footer would go here -->
+
+    <script>
+        // Dark/Light Mode Toggle Functionality
+        const modeToggle = document.getElementById('modeToggle');
+        const body = document.body;
+
+        modeToggle.addEventListener('click', () => {
+            body.classList.toggle('dark-mode');
+            if (body.classList.contains('dark-mode')) {
+                modeToggle.textContent = 'Light Mode';
+            } else {
+                modeToggle.textContent = 'Dark Mode';
+            }
+        });
+
+        // Sorting Visualizer Code
+        const arrayContainer = document.getElementById('array-container');
+        const consoleOutput = document.getElementById('console-output');
+        const arrayInput = document.getElementById('array-input');
+        const generateBtn = document.getElementById('generate-btn');
+        const sortBtn = document.getElementById('sort-btn');
+        const pauseBtn = document.getElementById('pause-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const speedSlider = document.getElementById('speed-slider');
+
+        let array = [];
+        let sorting = false;
+        let paused = false;
+        let sortingInterval;
+
+        // Generate array bars based on input
+        function generateArray() {
+            // Clear previous array
+            arrayContainer.innerHTML = '';
+            consoleOutput.innerHTML = '';
+            addConsoleMessage('Array generated.', 'info');
+
+            // Parse input values
+            const inputValues = arrayInput.value.split(',').map(val => parseInt(val.trim())).filter(val => !isNaN(val));
+            
+            if (inputValues.length === 0) {
+                addConsoleMessage('Please enter valid numbers separated by commas.', 'info');
+                return;
+            }
+
+            array = inputValues;
+            
+            // Find max value for scaling
+            const maxValue = Math.max(...array);
+            
+            // Create and add bars to container
+            array.forEach((value, index) => {
+                const heightPercentage = (value / maxValue) * 100;
+                const bar = document.createElement('div');
+                bar.classList.add('array-bar');
+                bar.style.height = `${heightPercentage * 2.5}px`; // Scale height
+                bar.innerHTML = value;
+                
+                // Add index number under each bar
+                const indexLabel = document.createElement('div');
+                indexLabel.classList.add('array-bar-index');
+                indexLabel.textContent = index;
+                bar.appendChild(indexLabel);
+                
+                arrayContainer.appendChild(bar);
+            });
+            
+            addConsoleMessage(`Created array: [${array.join(', ')}]`, 'info');
+        }
+
+        // Add message to console
+        function addConsoleMessage(message, type) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('console-message', type);
+            messageElement.textContent = message;
+            consoleOutput.appendChild(messageElement);
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        }
+
+        // Update the visualization
+        function updateBars() {
+            const bars = arrayContainer.querySelectorAll('.array-bar');
+            const maxValue = Math.max(...array);
+            
+            array.forEach((value, index) => {
+                const heightPercentage = (value / maxValue) * 100;
+                bars[index].style.height = `${heightPercentage * 2.5}px`;
+                bars[index].innerHTML = value;
+                
+                const indexLabel = document.createElement('div');
+                indexLabel.classList.add('array-bar-index');
+                indexLabel.textContent = index;
+                bars[index].appendChild(indexLabel);
+            });
+        }
+
+        // Set bars to comparing state
+        function setComparing(indices) {
+            const bars = arrayContainer.querySelectorAll('.array-bar');
+            indices.forEach(index => {
+                bars[index].classList.add('comparing');
+            });
+        }
+
+        // Set bars to swapping state
+        function setSwapping(indices) {
+            const bars = arrayContainer.querySelectorAll('.array-bar');
+            indices.forEach(index => {
+                bars[index].classList.add('swapping');
+            });
+        }
+
+        // Reset bar states
+        function resetBarStates() {
+            const bars = arrayContainer.querySelectorAll('.array-bar');
+            bars.forEach(bar => {
+                bar.classList.remove('comparing', 'swapping', 'sorted');
+            });
+        }
+
+        // Mark all bars as sorted
+        function markSorted() {
+            const bars = arrayContainer.querySelectorAll('.array-bar');
+            bars.forEach(bar => {
+                bar.classList.add('sorted');
+            });
+        }
+
+        // Get delay based on speed slider
+        function getDelay() {
+            const speed = parseInt(speedSlider.value);
+            return 1000 / speed; // Faster speeds = smaller delays
+        }
+
+        // Bubble Sort Algorithm with visualization
+        async function bubbleSort() {
+            sorting = true;
+            paused = false;
+            pauseBtn.textContent = 'Pause';
+            
+            addConsoleMessage('Starting Bubble Sort...', 'info');
+            
+            const n = array.length;
+            let swapped;
+            
+            for (let i = 0; i < n; i++) {
+                swapped = false;
+                
+                for (let j = 0; j < n - i - 1; j++) {
+                    if (paused) {
+                        await new Promise(resolve => {
+                            sortingInterval = setInterval(() => {
+                                if (!paused) {
+                                    clearInterval(sortingInterval);
+                                    resolve();
+                                }
+                            }, 100);
+                        });
+                    }
+                    
+                    // Reset previous states
+                    resetBarStates();
+                    
+                    // Highlight bars being compared
+                    setComparing([j, j + 1]);
+                    addConsoleMessage(`Comparing ${array[j]} and ${array[j + 1]}`, 'compare');
+                    
+                    // Delay for visualization
+                    await new Promise(resolve => setTimeout(resolve, getDelay()));
+                    
+                    if (array[j] > array[j + 1]) {
+                        // Highlight bars being swapped
+                        setSwapping([j, j + 1]);
+                        addConsoleMessage(`${array[j]} > ${array[j + 1]}, swapping`, 'swap');
+                        
+                        // Swap elements
+                        [array[j], array[j + 1]] = [array[j + 1], array[j]];
+                        updateBars();
+                        swapped = true;
+                        
+                        // Delay after swap
+                        await new Promise(resolve => setTimeout(resolve, getDelay()));
+                    } else {
+                        addConsoleMessage(`${array[j]} <= ${array[j + 1]}, no swap needed`, 'compare');
+                    }
+                }
+                
+                // Mark the last element of this pass as sorted
+                const bars = arrayContainer.querySelectorAll('.array-bar');
+                bars[n - i - 1].classList.add('sorted');
+                
+                addConsoleMessage(`Pass ${i + 1} complete. Element ${array[n - i - 1]} is now in its correct position.`, 'info');
+                
+                // If no swapping occurred in this pass, array is sorted
+                if (!swapped) {
+                    addConsoleMessage('No swaps in this pass. Array is sorted!', 'complete');
+                    break;
+                }
+            }
+            
+            // Mark all elements as sorted
+            resetBarStates();
+            markSorted();
+            addConsoleMessage('Bubble Sort complete! Array is sorted.', 'complete');
+            sorting = false;
+        }
+
+        // Event Listeners
+        generateBtn.addEventListener('click', generateArray);
+        
+        sortBtn.addEventListener('click', () => {
+            if (!sorting) {
+                bubbleSort();
+            }
+        });
+        
+        pauseBtn.addEventListener('click', () => {
+            if (sorting) {
+                paused = !paused;
+                pauseBtn.textContent = paused ? 'Resume' : 'Pause';
+                addConsoleMessage(paused ? 'Sorting paused.' : 'Sorting resumed.', 'info');
+            }
+        });
+        
+        resetBtn.addEventListener('click', () => {
+            if (sorting) {
+                paused = true;
+                clearInterval(sortingInterval);
+                sorting = false;
+            }
+            generateArray();
+        });
+
+        // Initialize
+        generateArray();
+    </script>
+</body>
+</html>

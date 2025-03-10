@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VisuAlgo - Sorting Algorithm Visualization</title>
+    <link rel="stylesheet" href="./bubblesort.css">
+</head>
+<body>
+    <!-- Header Section -->
+    <header>
+        <div class="logo-container">
+            <a href="./homepage.html">
+            <img src="./VisuAlgo logo 2.png" alt="VisuAlgo Logo" class="logo">
+        </a>
+            <div class="logo-text">VisuAlgo</div>
+        </div>
+        <div class="search-container">
+            <input type="text" class="search-box" placeholder="Search algorithms...">
+        </div>
+        <button class="mode-toggle" id="modeToggle">Dark Mode</button>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container">
+        <h1 class="algorithm-title">Insertion Sort Visualization</h1>
+        <p class="algorithm-description">
+            Insertion Sort is a simple sorting algorithm that builds the final sorted array one item at a time.
+            It works by taking one element from the unsorted part and inserting it into its correct position in the
+            sorted part of the array. This process continues until the entire array is sorted. Insertion sort
+            is efficient for small datasets and partially sorted arrays.
+        </p>
+
+        <div class="visualizer-container">
+            <div class="visualizer">
+                <div class="controls">
+                    <div class="input-container">
+                        <label for="array-input">Input Numbers:</label>
+                        <input type="text" id="array-input" class="input-field" placeholder="e.g., 64,34,25,12,22,11,90" value="64,34,25,12,22,11,90">
+                        <button id="generate-btn" class="btn btn-generate">Generate Bars</button>
+                    </div>
+                    <div class="input-container">
+                        <button id="sort-btn" class="btn btn-sort">Start Sorting</button>
+                        <button id="pause-btn" class="btn btn-pause">Pause</button>
+                        <button id="reset-btn" class="btn btn-reset">Reset</button>
+                        <div class="speed-container">
+                            <label for="speed-slider">Speed:</label>
+                            <input type="range" id="speed-slider" class="speed-slider" min="1" max="5" value="2">
+                        </div>
+                    </div>
+                </div>
+                <div id="array-container" class="array-container">
+                    <!-- Array bars will be generated here -->
+                </div>
+            </div>
+            <div class="console">
+                <h3 class="console-title">Operation Log</h3>
+                <div id="console-output">
+                    <div class="console-message info">Welcome to Insertion Sort Visualization. Generate bars or enter numbers to begin.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="code-section">
+            <h3 class="code-title">Insertion Sort Implementation</h3>
+            <pre class="code-block">
+function insertionSort(arr) {
+    const n = arr.length;
+    
+    // Start from the second element (index 1)
+    for (let i = 1; i < n; i++) {
+        // Key element to be inserted in sorted sequence
+        let key = arr[i];
+        
+        // Move elements of arr[0..i-1], that are greater
+        // than key, to one position ahead of their current position
+        let j = i - 1;
+        while (j >= 0 && arr[j] > key) {
+            arr[j + 1] = arr[j];
+            j = j - 1;
+        }
+        
+        // Place key at its correct position
+        arr[j + 1] = key;
+    }
+    
+    return arr;
+}</pre>
+        </div>
+    </div>
+
+    <!-- Footer would go here -->
+
+    <script>
+        // Dark/Light Mode Toggle Functionality
+        const modeToggle = document.getElementById('modeToggle');
+        const body = document.body;
+
+        modeToggle.addEventListener('click', () => {
+            body.classList.toggle('dark-mode');
+            if (body.classList.contains('dark-mode')) {
+                modeToggle.textContent = 'Light Mode';
+            } else {
+                modeToggle.textContent = 'Dark Mode';
+            }
+        });
+
+        // Sorting Visualizer Code
+        const arrayContainer = document.getElementById('array-container');
+        const consoleOutput = document.getElementById('console-output');
+        const arrayInput = document.getElementById('array-input');
+        const generateBtn = document.getElementById('generate-btn');
+        const sortBtn = document.getElementById('sort-btn');
+        const pauseBtn = document.getElementById('pause-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const speedSlider = document.getElementById('speed-slider');
+
+        let array = [];
+        let sorting = false;
+        let paused = false;
+        let sortingInterval;
+
+        // Generate array bars based on input
+        function generateArray() {
+            // Clear previous array
+            arrayContainer.innerHTML = '';
+            consoleOutput.innerHTML = '';
+            addConsoleMessage('Array generated.', 'info');
+
+            // Parse input values
+            const inputValues = arrayInput.value.split(',').map(val => parseInt(val.trim())).filter(val => !isNaN(val));
+            
+            if (inputValues.length === 0) {
+                addConsoleMessage('Please enter valid numbers separated by commas.', 'info');
+                return;
+            }
+
+            array = inputValues;
+            
+            // Find max value for scaling
+            const maxValue = Math.max(...array);
+            
+            // Create and add bars to container
+            array.forEach((value, index) => {
+                const heightPercentage = (value / maxValue) * 100;
+                const bar = document.createElement('div');
+                bar.classList.add('array-bar');
+                bar.style.height = `${heightPercentage * 2.5}px`; // Scale height
+                bar.innerHTML = value;
+                
+                // Add index number under each bar
+                const indexLabel = document.createElement('div');
+                indexLabel.classList.add('array-bar-index');
+                indexLabel.textContent = index;
+                bar.appendChild(indexLabel);
+                
+                arrayContainer.appendChild(bar);
+            });
+            
+            addConsoleMessage(`Created array: [${array.join(', ')}]`, 'info');
+        }
+
+        // Add message to console
+        function addConsoleMessage(message, type) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('console-message', type);
+            messageElement.textContent = message;
+            consoleOutput.appendChild(messageElement);
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        }
+
+        // Update the visualization
+        function updateBars() {
+            const bars = arrayContainer.querySelectorAll('.array-bar');
+            const maxValue = Math.max(...array);
+            
+            array.forEach((value, index) => {
+                const heightPercentage = (value / maxValue) * 100;
+                bars[index].style.height = `${heightPercentage * 2.5}px`;
+                bars[index].innerHTML = value;
+                
+                // Remove existing index labels to avoid duplicates
+                const existingLabel = bars[index].querySelector('.array-bar-index');
+                if (existingLabel) {
+                    bars[index].removeChild(existingLabel);
+                }
+                
+                const indexLabel = document.createElement('div');
+                indexLabel.classList.add('array-bar-index');
+                indexLabel.textContent = index;
+                bars[index].appendChild(indexLabel);
+            });
+        }
+
+        // Set bars to comparing state
+        function setComparing(indices) {
+            const bars = arrayContainer.querySelectorAll('.array-bar');
+            indices.forEach(index => {
+                if (index >= 0 && index < bars.length) {
+                    bars[index].classList.add('comparing');
+                }
+            });
+        }
+
+        // Set bars to swapping state
+        function setSwapping(indices) {
+            const bars = arrayContainer.querySelectorAll('.array-bar');
+            indices.forEach(index => {
+                if (index >= 0 && index < bars.length) {
+                    bars[index].classList.add('swapping');
+                }
+            });
+        }
+
+        // Set bars to key element state (the element being inserted)
+        function setKeyElement(index) {
+            const bars = arrayContainer.querySelectorAll('.array-bar');
+            if (index >= 0 && index < bars.length) {
+                bars[index].classList.add('key-element');
+            }
+        }
+
+        // Reset bar states
+        function resetBarStates() {
+            const bars = arrayContainer.querySelectorAll('.array-bar');
+            bars.forEach(bar => {
+                bar.classList.remove('comparing', 'swapping', 'key-element');
+            });
+        }
+
+        // Mark sorted part of the array
+        function markSorted(index) {
+            const bars = arrayContainer.querySelectorAll('.array-bar');
+            for (let i = 0; i <= index; i++) {
+                bars[i].classList.add('sorted');
+            }
+        }
+
+        // Mark all bars as sorted
+        function markAllSorted() {
+            const bars = arrayContainer.querySelectorAll('.array-bar');
+            bars.forEach(bar => {
+                bar.classList.add('sorted');
+            });
+        }
+
+        // Get delay based on speed slider
+        function getDelay() {
+            const speed = parseInt(speedSlider.value);
+            return 1000 / speed; // Faster speeds = smaller delays
+        }
+
+        // Insertion Sort Algorithm with visualization
+        async function insertionSort() {
+            sorting = true;
+            paused = false;
+            pauseBtn.textContent = 'Pause';
+            
+            addConsoleMessage('Starting Insertion Sort...', 'info');
+            
+            const n = array.length;
+            
+            // Mark the first element as sorted initially
+            markSorted(0);
+            addConsoleMessage(`Element at index 0 (${array[0]}) is initially considered sorted.`, 'info');
+            await new Promise(resolve => setTimeout(resolve, getDelay()));
+            
+            // Start from the second element (index 1)
+            for (let i = 1; i < n; i++) {
+                // Wait if paused
+                if (paused) {
+                    await new Promise(resolve => {
+                        sortingInterval = setInterval(() => {
+                            if (!paused) {
+                                clearInterval(sortingInterval);
+                                resolve();
+                            }
+                        }, 100);
+                    });
+                }
+                
+                resetBarStates();
+                
+                // Highlight the key element to be inserted
+                let key = array[i];
+                setKeyElement(i);
+                addConsoleMessage(`Current key element: ${key} at index ${i}`, 'info');
+                await new Promise(resolve => setTimeout(resolve, getDelay()));
+                
+                // Find the correct position for the key element in the sorted part
+                let j = i - 1;
+                
+                // Shift elements that are greater than key to the right
+                while (j >= 0 && array[j] > key) {
+                    if (paused) {
+                        await new Promise(resolve => {
+                            sortingInterval = setInterval(() => {
+                                if (!paused) {
+                                    clearInterval(sortingInterval);
+                                    resolve();
+                                }
+                            }, 100);
+                        });
+                    }
+                    
+                    resetBarStates();
+                    setKeyElement(i);
+                    setComparing([j, j + 1]);
+                    addConsoleMessage(`Comparing ${array[j]} with key ${key}`, 'compare');
+                    await new Promise(resolve => setTimeout(resolve, getDelay()));
+                    
+                    addConsoleMessage(`${array[j]} > ${key}, shifting ${array[j]} to position ${j + 1}`, 'swap');
+                    setSwapping([j, j + 1]);
+                    array[j + 1] = array[j];
+                    updateBars();
+                    
+                    await new Promise(resolve => setTimeout(resolve, getDelay()));
+                    
+                    j--;
+                }
+                
+                // Check if the key has found its correct position
+                if (j + 1 !== i) {
+                    addConsoleMessage(`Inserting key ${key} at position ${j + 1}`, 'swap');
+                    array[j + 1] = key;
+                    updateBars();
+                    await new Promise(resolve => setTimeout(resolve, getDelay()));
+                } else {
+                    addConsoleMessage(`Key ${key} is already in the correct position`, 'info');
+                }
+                
+                // Mark the sorted part of the array
+                resetBarStates();
+                markSorted(i);
+                addConsoleMessage(`Elements up to index ${i} are now sorted`, 'info');
+                await new Promise(resolve => setTimeout(resolve, getDelay()));
+            }
+            
+            // Mark all elements as sorted
+            resetBarStates();
+            markAllSorted();
+            addConsoleMessage('Insertion Sort complete! Array is sorted.', 'complete');
+            sorting = false;
+        }
+
+        // Event Listeners
+        generateBtn.addEventListener('click', generateArray);
+        
+        sortBtn.addEventListener('click', () => {
+            if (!sorting) {
+                insertionSort();
+            }
+        });
+        
+        pauseBtn.addEventListener('click', () => {
+            if (sorting) {
+                paused = !paused;
+                pauseBtn.textContent = paused ? 'Resume' : 'Pause';
+                addConsoleMessage(paused ? 'Sorting paused.' : 'Sorting resumed.', 'info');
+            }
+        });
+        
+        resetBtn.addEventListener('click', () => {
+            if (sorting) {
+                paused = true;
+                clearInterval(sortingInterval);
+                sorting = false;
+            }
+            generateArray();
+        });
+
+        // Initialize
+        generateArray();
+    </script>
+</body>
+</html>
